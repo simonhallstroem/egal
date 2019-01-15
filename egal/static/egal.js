@@ -1,3 +1,76 @@
+// define a handler
+var BrushSize;
+BrushSize = 3;
+var BrushColor;
+BrushColor = "#000";
+function doc_keyUp(e) {
+
+    // Press e for white and 10px (eraser)
+    if (e.keyCode == 69) {
+	    BrushSize = 20;
+	    BrushColor = "#ffffff";
+	 }
+    // Press 1 for 1 
+    if (e.keyCode == 49) {
+	    BrushSize = 1;
+	 }
+    if (e.keyCode == 50) {
+	    BrushSize = 2;
+	 }
+    if (e.keyCode == 51) {
+	    BrushSize = 3;
+	 }
+    if (e.keyCode == 52) {
+	    BrushSize = 4;
+	 }
+    if (e.keyCode == 53) {
+	    BrushSize = 5;
+	 }
+    if (e.keyCode == 54) {
+	    BrushSize = 6;
+	 }
+    if (e.keyCode == 55) {
+	    BrushSize = 7;
+	 }
+    if (e.keyCode == 56) {
+	    BrushSize = 8;
+	 }
+    if (e.keyCode == 57) {
+	    BrushSize = 9;
+	 }	
+
+    // Press r for red 
+    if (e.keyCode == 82) {
+	    BrushColor = "#ff0000";
+	 }
+    // Press s for black 
+    if (e.keyCode == 83) {
+	    BrushColor = "#000000";
+	 }
+    // Press b for blue
+    if (e.keyCode == 66) {
+	    BrushColor = "#0000ff";
+	 }
+    // Press g for green 
+    if (e.keyCode == 71) {
+	    BrushColor = "#00ff00";
+	 }
+
+}
+
+// register the handler 
+document.addEventListener('keyup', doc_keyUp, false);
+
+
+
+
+
+
+
+
+
+
+
 function trimPX(string) {
     return string.substring(0, string.length - 2);
 }
@@ -1599,26 +1672,49 @@ define(['jquery', './snap.svg', './text!./menu.html'], function ($, snap, menuTx
         var lastLine = null;
         var lastLineTime = 0;
         var continuing = false;
+	
+	var start = true;
+	//var startx = null;
+	//var starty = null;
+	var firstx = null;
+	var firsty = null;
+	var secondx = null;	
+	var secondy = null;	
+	var thirdx = null;
+	var thirdy = null;
+	var count = null;
+	var delay = 6;
+	var delaycount=0;
 
         this.onMouseDown = function (e, element) {
             if (!line) {
+				start = true;
+				count = 1;
+				delaycount = 0;
+				var offset = $(element.node).offset();
+                //startx = e.pageX - offset.left;
+                //starty = e.pageY - offset.top;
+                firstx = e.pageX - offset.left;
+                firsty = e.pageY - offset.top;
                 var d = new Date();
                 var now = d.getTime();
-                if (now - lastLineTime > 1000) {
-                    var offset = $(element.node).offset();
+                if (now - lastLineTime > 300) {
+                    offset = $(element.node).offset();
                     var x = e.pageX - offset.left;
                     var y = e.pageY - offset.top;
-                    line = drupyter.snap.path("M" + x + "," + y);
+                    line = drupyter.snap.path("M " + x + " " + y + " ");
+					console.log("M");
                     line.attr({
                         fill: "none",
-                        stroke: "#000",
-                        strokeWidth: 1,
+                        stroke: BrushColor,
+                        strokeWidth: BrushSize,
                         "vector-effect": "non-scaling-stroke"
                     });
                 }
                 else {
                     line = lastLine;
                     continuing = true;
+					console.log("Set continuing true");
                 }
             }
         };
@@ -1637,20 +1733,76 @@ define(['jquery', './snap.svg', './text!./menu.html'], function ($, snap, menuTx
         };
 
         this.onMouseMove = function (e, element) {
-            if (line) {
-                // console.log("Changing ...");
-                var offset = $(element.node).offset();
-                var x = e.pageX - offset.left;
-                var y = e.pageY - offset.top;
-                var points = line.attr("d");
-                if (continuing) {
-                    points += "M" + x + "," + y;
-                    continuing = false;
-                }
-                else
-                    points += "L" + x + "," + y;
-                line.attr({"d": points});
-            }
+			if (delaycount % delay == 0) {
+					if (line) {
+						// console.log("Changing ...");
+						var offset = $(element.node).offset();
+						var x = e.pageX - offset.left;
+						var y = e.pageY - offset.top;
+						//console.log("e.pageX", e.pageX);
+						//console.log("offset.left", offset.left);
+						//console.log("x:", x);
+						//console.log("y:", y);
+
+						if (count == 1) {
+							console.log("Count", count);	
+							secondx = e.pageX - offset.left;
+							secondy = e.pageY - offset.top;
+							count = count + 1;
+							delaycount = delaycount + 1;
+						}
+						if (count == 2) {
+							console.log("Count", count);	
+							thirdx= e.pageX - offset.left;
+							thirdy= e.pageY - offset.top;
+							count = count + 1;
+							delaycount = delaycount + 1;
+						}
+						if (count == 3) {
+							console.log("Count", count);	
+								var points = line.attr("d");
+								if (continuing) {
+									console.log("Continuing...")
+									points += "M" + x + "," + y;
+									continuing = false;
+								}
+								else {
+									if (start) {
+										console.log("C");
+										points += "C " + secondx +" " + secondy  + " " + secondx +" " + secondy  + " " + thirdx + " " + thirdy + " " ;
+										line.attr({"d": points});
+										start=false;
+									} else {
+										console.log("S");
+										points += "S " + secondx +" " + secondy  + " " + thirdx + " " + thirdy + " " ;
+										line.attr({"d": points});
+									}
+										//cx = ( startx + x ) / 2;
+										//console.log("cx: ",cx);
+										//cy = ( starty + y ) / 2;
+										//console.log("cy: ",cy);
+										//points += "Q" + cx +"," + cy + "," + x + "," + y;
+										//console.log("Q");
+										//points += "Q" + secondx +"," + secondy + "," + thirdx + "," + thirdy;
+										//console.log("C");
+										//points += "C" + secondx +"," + secondy  + "," + secondx +"," + secondy  + "," + thirdx + "," + thirdy;
+										//line.attr({"d": points});
+										//start=false
+										//console.log("T");
+										//points += "T" + x + "," + y;
+										//points += "T" + x + "," + y;
+										//line.attr({"d": points});
+								}
+								count = 1;
+								firstx = thirdx;
+								firsty = thirdy;
+								delaycount = delaycount + 1;
+								//console.log(points);
+						}
+						
+							
+					}
+			}
         };
 
         this.onClickElement = function (e, element) {
